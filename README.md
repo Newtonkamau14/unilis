@@ -53,4 +53,19 @@ The project follows an **iterative design and development cycle**, allowing cont
 - Iterate on the system design based on evaluation results to improve accuracy and quality of feedback.
 
 **6. Deployment and Validation**
-- Deploy the system in a controlled
+- Deploy the system in a controlled educational environment or integrated LMS platform for pilot testing.
+- Validate performance using real student-submitted medical diagrams.
+- Document lessons learned, system limitations, and recommendations for broader academic adoption.
+
+### 3.1.2 Rationale for Design and Implementation Approach
+
+The **Design and Implementation** methodology is well-suited for this project because:
+
+- It enables the construction of a novel AI artifact specifically tailored for automated medical diagram assessment.
+- It supports rigorous empirical evaluation, allowing both quantitative performance measurement and qualitative pedagogical assessment.
+- The iterative nature facilitates continuous refinement to address complex challenges such as diagram variability and multimodal reasoning.
+- It effectively bridges the gap between cutting-edge AI research and real-world pedagogical practice, ensuring the system is both technically sound and educationally valuable.
+
+---
+
+This structured methodology ensures the development of a robust, accurate, explainable, and pedagogically effective AI system for assessing medical diagrams in higher education.
