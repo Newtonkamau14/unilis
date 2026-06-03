@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI
 from shared.schemas import IngestionRequest, IngestionResponse, IngestionData
 

@@ -29,6 +29,7 @@ class IngestionResponse(BaseResponse):
 # -------------------------
 # DETECTION CONTRACTS
 # -------------------------
+
 class BoundingBox(BaseModel):
     x1: int
     y1: int
@@ -42,18 +43,32 @@ class Detection(BaseModel):
     confidence: float
 
 
+class ImageDetectionResult(BaseModel):
+
+    image_path: str
+
+    detections: List[Detection]
+
+    segmentation_mask: str
+
+    detection_image: str
+
+    overlay_image: str
+
+
 class DetectionRequest(BaseModel):
+
     image_paths: List[str]
 
 
 class DetectionData(BaseModel):
-    detections: List[Detection]
-    segmentation_mask: str
+
+    results: List[ImageDetectionResult]
 
 
 class DetectionResponse(BaseResponse):
-    data: Optional[DetectionData]
 
+    data: Optional[DetectionData]
 
 # -------------------------
 # OCR CONTRACTS

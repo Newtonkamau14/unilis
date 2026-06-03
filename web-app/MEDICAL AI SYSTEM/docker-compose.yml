@@ -1,1 +1,40 @@
+version: "3.9"
 
+services:
+
+  ingestion:
+    build: ./INGESTION
+    ports:
+      - "8001:8001"
+
+  ocr:
+    build: ./OCR
+    ports:
+      - "8002:8002"
+
+  detection:
+    build: ./DETECTION
+    container_name: detection_service
+
+  ports:
+    - "8003:8003"
+
+  volumes:
+    - ./STORAGE:/app/STORAGE
+
+  restart: unless-stopped
+
+  scoring:
+    build: ./SCORING
+    ports:
+      - "8004:8004"
+
+  explainability:
+    build: ./EXPLAINABILITY
+    ports:
+      - "8005:8005"
+
+  gateway:
+    build: ./GATEWAY
+    ports:
+      - "8000:8000"

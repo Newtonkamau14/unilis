@@ -1,29 +1,32 @@
 from fastapi import FastAPI
-from shared.schemas import (
-    ScoringRequest,
-    ScoringResponse,
-    ScoringData
-)
+from pydantic import BaseModel
+from sbert_model import embed
+from scoring_logic import compute_score
 
 app = FastAPI()
 
 
-@app.post("/score", response_model=ScoringResponse)
-def score(request: ScoringRequest):
-    try:
-        return ScoringResponse(
-            status="success",
-            data=ScoringData(
-                final_score=0.82,
-                label_accuracy=0.88,
-                structure_accuracy=0.79
-            ),
-            error=None
-        )
+class ScoreRequest(BaseModel):
+    student_text: str
+    reference_text: str
 
-    except Exception as e:
-        return ScoringResponse(
-            status="error",
-            data=None,
-            error=str(e)
-        )
+
+@app.post("/score")
+def score(req: ScoreRequest):
+
+    student_emb = embed(
+        req.student_text
+    )
+
+    ref_emb = embed(
+        req.reference_text
+    )
+
+    score = compute_score(
+        student_emb,
+        ref_emb
+    )
+
+    return {
+        "score": score
+    }
