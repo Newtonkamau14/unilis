@@ -3474,5 +3474,85 @@
         "status": "Excellent",
         "color": "#2E8B57",
         "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:14",
+        "co2_ppm": 401,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:19",
+        "co2_ppm": 401,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:24",
+        "co2_ppm": 400,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:29",
+        "co2_ppm": 404,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:34",
+        "co2_ppm": 404,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:39",
+        "co2_ppm": 403,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:44",
+        "co2_ppm": 402,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:49",
+        "co2_ppm": 401,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:54",
+        "co2_ppm": 401,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
+    },
+    {
+        "date": "2026-06-03",
+        "timestamp": "14:31:59",
+        "co2_ppm": 400,
+        "status": "Excellent",
+        "color": "#2E8B57",
+        "bg": "#EAF4EF"
     }
 ]
