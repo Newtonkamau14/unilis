@@ -53,8 +53,8 @@ def load_model():
 
     model.load_state_dict(
         torch.load(
-            MODEL_PATH,
-            map_location=DEVICE
+            "weights/attention_unet.pth",
+        map_location=DEVICE
         )
     )
 
