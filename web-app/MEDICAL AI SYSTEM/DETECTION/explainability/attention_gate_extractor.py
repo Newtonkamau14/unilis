@@ -3,8 +3,9 @@ import torch.nn as nn
 from typing import Dict
 from typing import List
 
-from logger import logger
+import logging  # Correct
 
+logger = logging.getLogger(__name__)
 
 class AttentionGateExtractor:
     """

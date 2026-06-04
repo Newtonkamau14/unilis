@@ -283,15 +283,30 @@ class ScoringResponse(
 # EXPLAINABILITY CONTRACTS
 # =====================================================
 
-class ExplainRequest(
-    ImageRequest
-):
+class ExplainRequest(ImageRequest):
+
     detections: List[Detection]
 
     score: float
 
+    grade: Optional[str] = None
+
+    feedback: Optional[List[str]] = None
+
+    verification_data: Optional[
+        VerificationData
+    ] = None
+
+    scoring_breakdown: Optional[
+        ScoreBreakdown
+    ] = None
+
+    segmentation_mask: Optional[
+        str
+    ] = None
 
 class ExplainData(BaseModel):
+
     heatmap_path: str
 
     gradcam_path: str
@@ -300,12 +315,20 @@ class ExplainData(BaseModel):
 
     overlay_path: str
 
+    report_path: Optional[str]
+
+    confidence_score: float
+
     attribution_scores: Dict[
         str,
         float
     ]
 
     explanation: str
+
+    generated_at: datetime = Field(
+        default_factory=datetime.utcnow
+    )
 
 
 class ExplainResponse(
