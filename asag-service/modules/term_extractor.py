@@ -1,13 +1,3 @@
-"""
-term_extractor.py
-------------------
-Extracts domain-relevant terms from the reference answer using POS tagging.
-Filters for NOUN, VERB, ADJECTIVE tags — these carry domain meaning.
-
-Used by TerminologyScorer and Missing Terms Identifier.
-Falls back to simple heuristics if spacy is unavailable.
-"""
-
 from __future__ import annotations
 
 try:
