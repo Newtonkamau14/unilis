@@ -1,7 +1,8 @@
-from datetime import datetime
-from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # =====================================================
@@ -9,6 +10,10 @@ from pydantic import BaseModel, Field
 # =====================================================
 
 class ResponseMetadata(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
     created_at: datetime = Field(
         default_factory=datetime.utcnow
     )
@@ -23,6 +28,11 @@ class ResponseMetadata(BaseModel):
 # =====================================================
 
 class BaseResponse(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,
+        arbitrary_types_allowed=True
+    )
+
     status: str
 
     data: Optional[Any] = None
@@ -37,6 +47,10 @@ class BaseResponse(BaseModel):
 # =====================================================
 
 class SubmissionRequest(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
     submission_id: str
 
     created_at: datetime = Field(
@@ -94,7 +108,9 @@ class Detection(BaseModel):
 
     confidence: float
 
-    segmentation_confidence: Optional[float] = None
+    segmentation_confidence: Optional[
+        float
+    ] = None
 
 
 class ImageDetectionResult(BaseModel):
@@ -109,16 +125,22 @@ class ImageDetectionResult(BaseModel):
     overlay_image: str
 
 
-class DetectionRequest(SubmissionRequest):
+class DetectionRequest(
+    SubmissionRequest
+):
     image_paths: List[str]
 
 
 class DetectionData(BaseModel):
-    results: List[ImageDetectionResult]
+    results: List[
+        ImageDetectionResult
+    ]
 
 
 class DetectionResponse(BaseResponse):
-    data: Optional["DetectionData"] = None
+    data: Optional[
+        "DetectionData"
+    ] = None
 
 
 # =====================================================
@@ -146,14 +168,36 @@ class OCRData(BaseModel):
 
 
 class OCRResponse(BaseResponse):
-    data: Optional["OCRData"] = None
+    data: Optional[
+        "OCRData"
+    ] = None
 
 
 # =====================================================
-# SCORING CONTRACTS
+# MULTIMODAL VERIFICATION CONTRACTS
 # =====================================================
 
-class ScoringRequest(SubmissionRequest):
+class LabelMatch(BaseModel):
+    component_name: str
+
+    detected_label: str
+
+    similarity_score: float
+
+    matched: bool
+
+
+class SpatialValidation(BaseModel):
+    label: str
+
+    distance_to_structure: float
+
+    spatially_correct: bool
+
+
+class VerificationRequest(
+    SubmissionRequest
+):
     detections: List[Detection]
 
     recognized_text: List[OCRText]
@@ -161,25 +205,87 @@ class ScoringRequest(SubmissionRequest):
     embeddings: List[float]
 
 
-class ScoringData(BaseModel):
-    final_score: float
+class VerificationData(BaseModel):
+    label_matches: List[
+        LabelMatch
+    ]
+
+    spatial_validations: List[
+        SpatialValidation
+    ]
+
+    semantic_similarity: float
 
     label_accuracy: float
 
-    structure_accuracy: float
+    missing_labels: List[str]
 
-    feedback: Optional[str] = None
+    mismatched_labels: List[str]
+
+    ontology_matches: List[str]
 
 
-class ScoringResponse(BaseResponse):
-    data: Optional["ScoringData"] = None
+class VerificationResponse(
+    BaseResponse
+):
+    data: Optional[
+        "VerificationData"
+    ] = None
+
+
+# =====================================================
+# SCORING CONTRACTS
+# =====================================================
+
+class ScoreBreakdown(BaseModel):
+    completeness: float
+
+    structural_accuracy: float
+
+    label_correctness: float
+
+    spatial_correctness: float
+
+    diagram_quality: float
+
+
+class ScoringRequest(
+    SubmissionRequest
+):
+    detections: List[Detection]
+
+    recognized_text: List[OCRText]
+
+    embeddings: List[float]
+
+    verification_data: VerificationData
+
+
+class ScoringData(BaseModel):
+    final_score: float
+
+    grade: str
+
+    breakdown: ScoreBreakdown
+
+    feedback: List[str]
+
+
+class ScoringResponse(
+    BaseResponse
+):
+    data: Optional[
+        "ScoringData"
+    ] = None
 
 
 # =====================================================
 # EXPLAINABILITY CONTRACTS
 # =====================================================
 
-class ExplainRequest(ImageRequest):
+class ExplainRequest(
+    ImageRequest
+):
     detections: List[Detection]
 
     score: float
@@ -188,11 +294,52 @@ class ExplainRequest(ImageRequest):
 class ExplainData(BaseModel):
     heatmap_path: str
 
-    feedback: str
+    gradcam_path: str
+
+    attention_map_path: str
+
+    overlay_path: str
+
+    attribution_scores: Dict[
+        str,
+        float
+    ]
+
+    explanation: str
 
 
-class ExplainResponse(BaseResponse):
-    data: Optional["ExplainData"] = None
+class ExplainResponse(
+    BaseResponse
+):
+    data: Optional[
+        "ExplainData"
+    ] = None
+
+
+# =====================================================
+# FINAL ASSESSMENT REPORT
+# =====================================================
+
+class AssessmentReport(BaseModel):
+    submission_id: str
+
+    final_score: float
+
+    grade: str
+
+    detection_results: DetectionData
+
+    ocr_results: OCRData
+
+    verification_results: VerificationData
+
+    scoring_results: ScoringData
+
+    explainability_results: ExplainData
+
+    generated_at: datetime = Field(
+        default_factory=datetime.utcnow
+    )
 
 
 # =====================================================
@@ -202,23 +349,45 @@ class ExplainResponse(BaseResponse):
 class PipelineResult(BaseModel):
     submission_id: str
 
-    ingestion: Optional[IngestionData] = None
+    ingestion: Optional[
+        IngestionData
+    ] = None
 
-    detection: Optional[DetectionData] = None
+    detection: Optional[
+        DetectionData
+    ] = None
 
-    ocr: Optional[OCRData] = None
+    ocr: Optional[
+        OCRData
+    ] = None
 
-    scoring: Optional[ScoringData] = None
+    verification: Optional[
+        VerificationData
+    ] = None
 
-    explainability: Optional[ExplainData] = None
+    scoring: Optional[
+        ScoringData
+    ] = None
+
+    explainability: Optional[
+        ExplainData
+    ] = None
+
+    assessment_report: Optional[
+        AssessmentReport
+    ] = None
 
     completed_at: datetime = Field(
         default_factory=datetime.utcnow
     )
 
 
-class PipelineResponse(BaseResponse):
-    data: Optional[PipelineResult] = None
+class PipelineResponse(
+    BaseResponse
+):
+    data: Optional[
+        PipelineResult
+    ] = None
 
 
 # =====================================================
@@ -233,8 +402,11 @@ DetectionResponse.model_rebuild()
 
 OCRResponse.model_rebuild()
 
+VerificationResponse.model_rebuild()
+
 ScoringResponse.model_rebuild()
 
 ExplainResponse.model_rebuild()
 
 PipelineResponse.model_rebuild()
+
