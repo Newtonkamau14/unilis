@@ -1,20 +1,3 @@
-"""
-mcq_grader.py
---------------
-Handles Multiple Choice Question grading.
-
-Why MCQ is a separate pipeline:
-  - No token/sentence embeddings are needed.
-  - Missing Terms Report is NOT generated (irrelevant for MCQ).
-  - Score is binary (correct/incorrect) — no weighted aggregation.
-  - Student answer is matched against the correct option by exact or
-    near-exact string comparison (handles "A", "A.", "Option A", full text).
-
-This answers the lecturer's concern: the system routes based on
-QuestionType BEFORE any NLP processing, so MCQ questions never
-go through the BERT encoder pipeline at all.
-"""
-
 from __future__ import annotations
 import re
 

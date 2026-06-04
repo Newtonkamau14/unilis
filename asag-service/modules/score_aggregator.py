@@ -1,20 +1,3 @@
-"""
-score_aggregator.py
---------------------
-Combines TerminologyScore and SemanticScore into a single weighted score.
-
-Weights are configurable. Default: 40% terminology, 60% semantic.
-The lecturer's concern about terminology relevance is addressed here:
-  - For SHORT_ANSWER: both scores are used.
-  - For MCQ: aggregator is bypassed entirely (see grader.py).
-
-Rationale for default weights:
-  - Semantic understanding is more important than exact vocabulary in most
-    educational contexts. A student who demonstrates understanding but uses
-    informal language should not be penalized heavily.
-  - Terminology weight can be increased for technical/professional courses.
-"""
-
 from __future__ import annotations
 
 

@@ -1,13 +1,3 @@
-"""
-bert_encoder.py
----------------
-Wraps a sentence-transformers model to produce:
-  - token_embeddings : per-token vectors  → used by TerminologyScorer
-  - sentence_embeddings : pooled CLS vector → used by SemanticScorer
-
-Uses 'all-MiniLM-L6-v2' as a lightweight default.
-Swap to 'bert-base-uncased' or a domain-specific model for production.
-"""
 
 from __future__ import annotations
 from functools import lru_cache

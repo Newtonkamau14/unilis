@@ -1,10 +1,3 @@
-"""
-feedback_generator.py
-----------------------
-Generates human-readable feedback for the student based on grading results.
-Output differs by question type.
-"""
-
 from __future__ import annotations
 
 

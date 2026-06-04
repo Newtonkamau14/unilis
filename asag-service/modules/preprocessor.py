@@ -1,11 +1,3 @@
-"""
-preprocessor.py
----------------
-Handles text cleaning before BERT encoding.
-- Stop word removal applied to question_context + reference_answer
-- Tokenizer applied to student_answer
-"""
-
 import re
 import string
 

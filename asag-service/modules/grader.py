@@ -1,50 +1,25 @@
-"""
-grader.py
-----------
-Central orchestrator. Routes to the correct pipeline based on QuestionType.
-
-PIPELINE DECISION TREE:
-                        [GradingRequest]
-                              |
-                    question_type check
-                    /                 \
-            MCQ                    SHORT_ANSWER
-             |                          |
-        MCQGrader                  preprocess()
-             |                          |
-        MCQResult                  BERTEncoder
-             |                    /          \
-        FeedbackReport   TokenEmbeddings  SentenceEmbeddings
-                              |                   |
-                       TerminologyScorer    SemanticScorer
-                              |                   |
-                       MissingTerms          SemanticScore
-                              \                  /
-                           ScoreAggregator (weighted)
-                                    |
-                              FinalWeightedScore
-                                    |
-                             FeedbackReport
-"""
-
 from __future__ import annotations
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from data.keyword_store import load_keywords
 from models.schemas import (
     GradingRequest, GradingResponse, QuestionType,
     TerminologyScore, SemanticScore, MCQResult,
 )
-from modules import (
-    preprocess, BERTEncoder, extract_terms,
-    TerminologyScorer, SemanticScorer, ScoreAggregator,
-    MCQGrader, FeedbackGenerator,
-)
+from .preprocessor import preprocess
+from .bert_encoder import BERTEncoder
+from .term_extractor import extract_terms
+from .terminology_scorer import TerminologyScorer
+from .semantic_scorer import SemanticScorer
+from .score_aggregator import ScoreAggregator
+from .mcq_grader import MCQGrader
+from .feedback_generator import FeedbackGenerator
 
 
 class ASAGGrader:
-    """
-    Automated Short Answer Grading service.
-    Handles both SHORT_ANSWER and MULTIPLE_CHOICE question types.
-    """
+    
 
     def __init__(
         self,
