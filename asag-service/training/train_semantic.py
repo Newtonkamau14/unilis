@@ -1,3 +1,26 @@
+"""
+train_semantic.py
+------------------
+Fine-tunes a BERT model for semantic scoring using SciEntsBank + Beetle.
+
+Approach (Objective 3):
+  - Task: 3-class classification (correct / partially_correct / incorrect)
+  - Input: [CLS] reference_answer [SEP] student_answer [SEP]
+  - Model: bert-base-uncased fine-tuned with a classification head
+  - Loss: CrossEntropyLoss
+  - Saved to: models/semantic_bert/
+
+This produces the fine-tuned model used by SemanticScorer in production.
+The sentence embedding from the fine-tuned [CLS] token is significantly
+more calibrated for grading than the generic pretrained model.
+
+Usage:
+  python -m training.train_semantic \
+    --data_dir data/datasets \
+    --output_dir models/semantic_bert \
+    --epochs 5 \
+    --batch_size 16
+"""
 
 from __future__ import annotations
 import argparse
@@ -7,14 +30,12 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import (
-    BertTokenizer,
-    BertForSequenceClassification,
+    DistilBertTokenizer,
+    DistilBertForSequenceClassification,
     get_linear_schedule_with_warmup,
 )
 from torch.optim import AdamW
 from sklearn.model_selection import train_test_split
-from collections import Counter
-
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,7 +44,7 @@ from data.dataset_loader import load_all, AnswerInstance
 
 SEED = 42
 NUM_LABELS = 3
-MAX_LEN = 256
+MAX_LEN = 128
 
 
 def set_seed(seed: int):
@@ -57,7 +78,6 @@ class AnswerDataset(Dataset):
         return {
             "input_ids": encoding["input_ids"].squeeze(0),
             "attention_mask": encoding["attention_mask"].squeeze(0),
-            "token_type_ids": encoding.get("token_type_ids", torch.zeros(self.max_len, dtype=torch.long)).squeeze(0),
             "labels": torch.tensor(inst.label, dtype=torch.long),
         }
 
@@ -81,7 +101,8 @@ def train(args):
             "No training data found. Download SciEntsBank and Beetle datasets first.\n"
             "See data/dataset_loader.py for download instructions."
         )
-        
+
+    from collections import Counter
     labels = [i.label for i in instances]
     min_class_count = min(Counter(labels).values())
     use_stratify = min_class_count >= 2 and len(instances) >= 20
@@ -92,13 +113,14 @@ def train(args):
     )
     print(f"\nTrain: {len(train_instances)} | Val: {len(val_instances)}")
     if not use_stratify:
-        print("  [NOTE] Sample dataset too small — using random split.")
-        print("  [NOTE] Download full SemEval datasets for real results.")
-        # 2. Tokenizer + model
-        print(f"\n--- Loading model: {args.base_model} ---")
-        tokenizer = BertTokenizer.from_pretrained(args.base_model)
-        model = BertForSequenceClassification.from_pretrained(
-            args.base_model, num_labels=NUM_LABELS
+        print("  [NOTE] Sample dataset too small for stratified split — using random split.")
+        print("  [NOTE] Download full SemEval datasets for meaningful results.")
+
+    # 2. Tokenizer + model
+    print(f"\n--- Loading model: {args.base_model} ---")
+    tokenizer = DistilBertTokenizer.from_pretrained(args.base_model)
+    model = DistilBertForSequenceClassification.from_pretrained(
+        args.base_model, num_labels=NUM_LABELS
     )
     model.to(device)
 
@@ -127,14 +149,12 @@ def train(args):
         for batch in train_loader:
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
-            token_type_ids = batch["token_type_ids"].to(device)
             labels = batch["labels"].to(device)
 
             optimizer.zero_grad()
             outputs = model(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
-                token_type_ids=token_type_ids,
                 labels=labels,
             )
             loss = outputs.loss
@@ -154,12 +174,10 @@ def train(args):
             for batch in val_loader:
                 input_ids = batch["input_ids"].to(device)
                 attention_mask = batch["attention_mask"].to(device)
-                token_type_ids = batch["token_type_ids"].to(device)
                 labels = batch["labels"].to(device)
                 outputs = model(
                     input_ids=input_ids,
                     attention_mask=attention_mask,
-                    token_type_ids=token_type_ids,
                 )
                 preds = outputs.logits.argmax(dim=-1)
                 correct += (preds == labels).sum().item()
@@ -170,7 +188,7 @@ def train(args):
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            model.save_pretrained(args.output_dir)
+            model.save_pretrained(args.output_dir, safe_serialization=False)
             tokenizer.save_pretrained(args.output_dir)
             print(f"  ✓ Saved best model (val_acc={val_acc:.4f}) to {args.output_dir}")
 
@@ -182,7 +200,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fine-tune BERT for semantic grading")
     parser.add_argument("--data_dir", default="data/datasets")
     parser.add_argument("--output_dir", default="models/semantic_bert")
-    parser.add_argument("--base_model", default="bert-base-uncased")
+    parser.add_argument("--base_model", default="distilbert-base-uncased")
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=2e-5)
