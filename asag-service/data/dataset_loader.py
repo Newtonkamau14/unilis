@@ -158,11 +158,11 @@ def load_huggingface_beetle(split="all", test_size=0.2, seed=42):
     instances = []
     for split_name, dataset in ds.items():
         for row in dataset:
-            question  = str(row.get("question", row.get("question_text", ""))).strip()
-            reference = str(row.get("reference_answer", row.get("reference", row.get("model_answer", "")))).strip()
-            student   = str(row.get("student_answer", row.get("answer", row.get("student", "")))).strip()
-            raw_label = row.get("label", row.get("accuracy", row.get("score", "irrelevant")))
-            qid       = str(row.get("id", row.get("question_id", "")))
+            question  = str(row.get("question", "")).strip()
+            reference = str(row.get("reference_answer", "")).strip()
+            student   = str(row.get("student_answer", "")).strip()
+            raw_label = row.get("label_5way", row.get("label", row.get("accuracy", row.get("score", "irrelevant"))))
+            qid       = str(row.get("question_id", row.get("id", "")))
 
             if isinstance(raw_label, int):
                 label_int = min(raw_label, 2)
@@ -188,13 +188,23 @@ def load_huggingface_beetle(split="all", test_size=0.2, seed=42):
 
     print(f"Loaded {len(instances)} total instances")
 
+    # Split by question ID to prevent leakage
+    # Same question must not appear in both train and val
+    from collections import Counter
     random.seed(seed)
-    random.shuffle(instances)
-    idx = int(len(instances) * (1 - test_size))
-    train_instances = instances[:idx]
-    test_instances  = instances[idx:]
+    question_ids = list({i.question_id for i in instances})
+    random.shuffle(question_ids)
+    split_idx    = int(len(question_ids) * (1 - test_size))
+    train_qids   = set(question_ids[:split_idx])
+    test_qids    = set(question_ids[split_idx:])
+
+    train_instances = [i for i in instances if i.question_id in train_qids]
+    test_instances  = [i for i in instances if i.question_id in test_qids]
     for i in train_instances: i.split = "train"
     for i in test_instances:  i.split = "test-unseen"
 
-    print(f"Split -> Train: {len(train_instances)} | Test: {len(test_instances)}")
+    print(f"Split by question ID -> Train questions: {len(train_qids)} | Test questions: {len(test_qids)}")
+    print(f"Train instances: {len(train_instances)} | Test instances: {len(test_instances)}")
+    print(f"Train label dist: {dict(Counter(i.label_str for i in train_instances))}")
+    print(f"Test label dist:  {dict(Counter(i.label_str for i in test_instances))}")
     return {"train": train_instances, "test": test_instances}

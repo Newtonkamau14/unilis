@@ -119,6 +119,7 @@ def train(args):
  
     # 5. Training loop
     best_val_acc = 0.0
+    no_improve = 0
     os.makedirs(args.output_dir, exist_ok=True)
  
     for epoch in range(1, args.epochs + 1):
@@ -133,9 +134,14 @@ def train(args):
             outputs = model(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
-                labels=labels,
             )
-            loss = outputs.loss
+            # Weighted loss — penalises majority class to prevent trivial accuracy
+            from collections import Counter
+            import torch.nn as nn
+            loss_fn = nn.CrossEntropyLoss(
+                weight=torch.tensor([1.5, 2.0, 1.0], dtype=torch.float).to(device)
+            )
+            loss = loss_fn(outputs.logits, labels)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
@@ -166,9 +172,15 @@ def train(args):
  
         if val_acc > best_val_acc:
             best_val_acc = val_acc
+            no_improve = 0
             model.save_pretrained(args.output_dir, safe_serialization=False)
             tokenizer.save_pretrained(args.output_dir)
             print(f"  ✓ Saved best model (val_acc={val_acc:.4f}) to {args.output_dir}")
+        else:
+            no_improve += 1
+            if no_improve >= 2:
+                print(f"  Early stopping — no improvement for 2 epochs.")
+                break
  
     print(f"\nTraining complete. Best val accuracy: {best_val_acc:.4f}")
     print(f"Fine-tuned model saved to: {args.output_dir}")
