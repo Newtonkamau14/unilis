@@ -179,7 +179,13 @@ def run_evaluation(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
  
-    instances = load_dataset(args.dataset, args.split, args.data_dir)
+    if args.use_hf:
+        from data.dataset_loader import load_huggingface_beetle
+        data = load_huggingface_beetle()
+        instances = data["test"]
+        print(f"Loaded {len(instances)} test instances from HuggingFace Beetle dataset")
+    else:
+        instances = load_dataset(args.dataset, args.split, args.data_dir)
     y_true = [i.label for i in instances]
  
     results = []
@@ -226,8 +232,6 @@ if __name__ == "__main__":
     parser.add_argument("--split", default="test-unseen",
                         choices=["train", "test-unseen", "test-unseen-domains", "all"])
     parser.add_argument("--output_dir", default="evaluation/results")
+    parser.add_argument("--use-hf", dest="use_hf", action="store_true", default=False, help="Evaluate on HuggingFace Beetle dataset")
     args = parser.parse_args()
     run_evaluation(args)
- 
-
-
