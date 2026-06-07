@@ -9,6 +9,7 @@ class FeedbackGenerator:
         terminology_score: float,
         semantic_score: float,
         missing_terms: list[str],
+        aggregation_explanation: str = "",
     ) -> str:
         lines = []
         grade = self._grade_label(final_score)
@@ -33,8 +34,12 @@ class FeedbackGenerator:
 
         # Missing terms
         if missing_terms:
-            terms_list = ", ".join(missing_terms[:5])  # cap at 5 to avoid clutter
+            terms_list = ", ".join(missing_terms[:5])
             lines.append(f"\nKey terms to review: {terms_list}")
+
+        # Aggregation explanation — shows how final score was computed
+        if aggregation_explanation:
+            lines.append(f"\nScoring: {aggregation_explanation}")
 
         return "\n".join(lines)
 
