@@ -19,7 +19,10 @@ from .feedback_generator import FeedbackGenerator
 
 
 class ASAGGrader:
-    
+    """
+    Automated Short Answer Grading service.
+    Handles both SHORT_ANSWER and MULTIPLE_CHOICE question types.
+    """
 
     def __init__(
         self,
@@ -30,7 +33,11 @@ class ASAGGrader:
         self.encoder = BERTEncoder(model_name=bert_model)
         self.terminology_scorer = TerminologyScorer(encoder=self.encoder)
         self.semantic_scorer = SemanticScorer(encoder=self.encoder)
-        self.aggregator = ScoreAggregator(terminology_weight, semantic_weight)
+        self.aggregator = ScoreAggregator(
+            mode="gating",
+            term_threshold=0.60,
+            penalty_strength=0.40,
+        )
         self.mcq_grader = MCQGrader()
         self.feedback_gen = FeedbackGenerator()
 
@@ -96,11 +103,12 @@ class ASAGGrader:
             student_answer=processed["raw_student"],
         )
 
-        # 6. Aggregate scores
-        final_score = self.aggregator.aggregate(
+        # 6. Aggregate scores (gating/penalty — avoids double-counting)
+        agg_result  = self.aggregator.aggregate(
             terminology_score=term_result["score"],
             semantic_score=sem_result["score"],
         )
+        final_score = agg_result["final_score"]
 
         # 7. Generate feedback
         feedback = self.feedback_gen.generate_short_answer_feedback(
@@ -108,6 +116,7 @@ class ASAGGrader:
             terminology_score=term_result["score"],
             semantic_score=sem_result["score"],
             missing_terms=term_result["missing_terms"],
+            aggregation_explanation=agg_result["explanation"],
         )
 
         return GradingResponse(
