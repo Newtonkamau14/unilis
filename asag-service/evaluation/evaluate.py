@@ -6,9 +6,9 @@ import json
 import numpy as np
 import torch
 from dataclasses import dataclass, asdict
- 
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
- 
+
 from data.dataset_loader import load_dataset, AnswerInstance
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 from sklearn.metrics import (
@@ -19,11 +19,11 @@ from sklearn.metrics import (
     confusion_matrix,
 )
 from scipy.stats import pearsonr
- 
- 
+
+
 MAX_LEN = 128
- 
- 
+
+
 @dataclass
 class EvaluationResult:
     dataset: str
@@ -39,8 +39,8 @@ class EvaluationResult:
     accuracy: float
     per_class_f1: dict
     confusion_matrix: list
- 
- 
+
+
 def predict_bert(
     instances: list[AnswerInstance],
     model_dir: str,
@@ -52,7 +52,7 @@ def predict_bert(
     model = DistilBertForSequenceClassification.from_pretrained(model_dir)
     model.to(device)
     model.eval()
- 
+
     all_preds = []
     for i in range(0, len(instances), batch_size):
         batch_insts = instances[i: i + batch_size]
@@ -73,10 +73,10 @@ def predict_bert(
             )
         preds = outputs.logits.argmax(dim=-1).cpu().tolist()
         all_preds.extend(preds)
- 
+
     return all_preds
- 
- 
+
+
 def holistic_baseline_predict(instances: list[AnswerInstance]) -> list[int]:
     """
     Baseline: single holistic BERT using sentence-transformers cosine similarity.
@@ -88,15 +88,15 @@ def holistic_baseline_predict(instances: list[AnswerInstance]) -> list[int]:
         model = SentenceTransformer("all-MiniLM-L6-v2")
     except ImportError:
         raise RuntimeError("sentence-transformers required for baseline. pip install sentence-transformers")
- 
+
     ref_texts = [i.reference_answer for i in instances]
     stu_texts = [i.student_answer for i in instances]
- 
+
     ref_embs = model.encode(ref_texts, normalize_embeddings=True, show_progress_bar=False)
     stu_embs = model.encode(stu_texts, normalize_embeddings=True, show_progress_bar=False)
- 
+
     sims = np.sum(ref_embs * stu_embs, axis=1)
- 
+
     # Threshold calibration (derived from SciEntsBank validation set)
     preds = []
     for s in sims:
@@ -107,8 +107,8 @@ def holistic_baseline_predict(instances: list[AnswerInstance]) -> list[int]:
         else:
             preds.append(0)   # incorrect
     return preds
- 
- 
+
+
 def compute_metrics(
     y_true: list[int],
     y_pred: list[int],
@@ -119,20 +119,20 @@ def compute_metrics(
     """Compute all metrics from Section 3.4."""
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
- 
+
     pearson_r, pearson_p = pearsonr(y_true, y_pred)
     kappa = cohen_kappa_score(y_true, y_pred, weights="quadratic")
     f1_mac = f1_score(y_true, y_pred, average="macro", zero_division=0)
     f1_wt = f1_score(y_true, y_pred, average="weighted", zero_division=0)
     mae = mean_absolute_error(y_true, y_pred)
     acc = np.mean(y_true == y_pred)
- 
+
     per_class = f1_score(y_true, y_pred, average=None, zero_division=0)
     label_names = ["incorrect", "partially_correct", "correct"]
     per_class_dict = {label_names[i]: round(float(per_class[i]), 4) for i in range(len(per_class))}
- 
+
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1, 2]).tolist()
- 
+
     return EvaluationResult(
         dataset=dataset,
         split=split,
@@ -148,8 +148,8 @@ def compute_metrics(
         per_class_f1=per_class_dict,
         confusion_matrix=cm,
     )
- 
- 
+
+
 def print_report(result: EvaluationResult, comparison: EvaluationResult | None = None):
     print(f"\n{'='*60}")
     print(f"Dataset: {result.dataset} | Split: {result.split} | Model: {result.model_type}")
@@ -164,7 +164,7 @@ def print_report(result: EvaluationResult, comparison: EvaluationResult | None =
     print(f"  Per-class F1:")
     for cls, score in result.per_class_f1.items():
         print(f"    {cls:<25} {score}")
- 
+
     if comparison:
         print(f"\n--- vs Baseline ({comparison.model_type}) ---")
         delta_kappa = result.cohen_kappa_quadratic - comparison.cohen_kappa_quadratic
@@ -173,12 +173,12 @@ def print_report(result: EvaluationResult, comparison: EvaluationResult | None =
         print(f"  ΔKappa:    {delta_kappa:+.4f}  ({'better' if delta_kappa > 0 else 'worse'})")
         print(f"  ΔF1 Macro: {delta_f1:+.4f}  ({'better' if delta_f1 > 0 else 'worse'})")
         print(f"  ΔPearson:  {delta_pearson:+.4f}  ({'better' if delta_pearson > 0 else 'worse'})")
- 
- 
+
+
 def run_evaluation(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
- 
+
     if args.use_hf:
         from data.dataset_loader import load_huggingface_beetle
         data = load_huggingface_beetle()
@@ -187,31 +187,31 @@ def run_evaluation(args):
     else:
         instances = load_dataset(args.dataset, args.split, args.data_dir)
     y_true = [i.label for i in instances]
- 
+
     results = []
     os.makedirs(args.output_dir, exist_ok=True)
- 
+
     # --- Multi-component model (fine-tuned) ---
     print(f"\nRunning fine-tuned model from {args.model_dir} ...")
     y_pred_ft = predict_bert(instances, args.model_dir, device)
     result_ft = compute_metrics(y_true, y_pred_ft, args.dataset, args.split, "multi_component_bert")
     results.append(result_ft)
- 
+
     # --- Holistic baseline ---
     print("Running holistic baseline ...")
     y_pred_bl = holistic_baseline_predict(instances)
     result_bl = compute_metrics(y_true, y_pred_bl, args.dataset, args.split, "holistic_baseline")
     results.append(result_bl)
- 
+
     # --- Print reports ---
     print_report(result_ft, comparison=result_bl)
     print_report(result_bl)
- 
+
     # --- Detailed sklearn report ---
     label_names = ["incorrect", "partially_correct", "correct"]
     print(f"\n--- Detailed classification report (fine-tuned) ---")
     print(classification_report(y_true, y_pred_ft, target_names=label_names, zero_division=0))
- 
+
     # --- Save results to JSON ---
     out_path = os.path.join(
         args.output_dir,
@@ -220,10 +220,10 @@ def run_evaluation(args):
     with open(out_path, "w") as f:
         json.dump([asdict(r) for r in results], f, indent=2)
     print(f"\nResults saved to: {out_path}")
- 
+
     return results
- 
- 
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", default="data/datasets")
@@ -235,3 +235,100 @@ if __name__ == "__main__":
     parser.add_argument("--use-hf", dest="use_hf", action="store_true", default=False, help="Evaluate on HuggingFace Beetle dataset")
     args = parser.parse_args()
     run_evaluation(args)
+
+
+# =============================================================================
+# ABLATION STUDY
+# =============================================================================
+
+def run_ablation(args):
+    import sys, os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+    from modules.score_aggregator import ScoreAggregator
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if args.use_hf:
+        from data.dataset_loader import load_huggingface_beetle
+        data = load_huggingface_beetle()
+        instances = data["test"]
+    else:
+        instances = load_dataset(args.dataset, args.split, args.data_dir)
+
+    y_true     = [i.label for i in instances]
+    y_pred_ft  = predict_bert(instances, args.model_dir, device)
+
+    # Get baseline cosine similarities for terminology proxy
+    try:
+        from sentence_transformers import SentenceTransformer
+        import numpy as np
+        st_model   = SentenceTransformer("all-MiniLM-L6-v2")
+        ref_embs   = st_model.encode([i.reference_answer for i in instances], normalize_embeddings=True)
+        stu_embs   = st_model.encode([i.student_answer   for i in instances], normalize_embeddings=True)
+        term_scores = np.sum(ref_embs * stu_embs, axis=1).tolist()
+    except Exception:
+        term_scores = [0.5] * len(instances)
+
+    modes = ["semantic_only", "terminology_only", "weighted_sum", "gating"]
+    ablation_results = []
+
+    print(f"\n{'='*70}")
+    print("ABLATION STUDY — Score Aggregation Mode Comparison")
+    print(f"{'='*70}")
+    print(f"{'Mode':<20} {'Pearson r':<12} {'Kappa(QW)':<12} {'F1 Macro':<12} {'MAE':<10}")
+    print("-"*70)
+
+    for mode in modes:
+        aggregator = ScoreAggregator(mode=mode)
+        # Re-map fine-tuned predictions through aggregator
+        # Use ft predictions as semantic proxy, term_scores as terminology proxy
+        agg_preds = []
+        for i, pred in enumerate(y_pred_ft):
+            sem_score  = pred / 2.0           # normalise 0-2 → 0-1
+            term_score = float(term_scores[i])
+            result     = aggregator.aggregate(term_score, sem_score)
+            # Convert back to 0-2 label
+            fs = result["final_score"]
+            if fs >= 0.67:
+                agg_preds.append(2)
+            elif fs >= 0.33:
+                agg_preds.append(1)
+            else:
+                agg_preds.append(0)
+
+        r, _   = pearsonr(y_true, agg_preds)
+        kappa  = cohen_kappa_score(y_true, agg_preds, weights="quadratic")
+        f1     = f1_score(y_true, agg_preds, average="macro", zero_division=0)
+        mae    = mean_absolute_error(y_true, agg_preds)
+        print(f"{mode:<20} {r:<12.4f} {kappa:<12.4f} {f1:<12.4f} {mae:<10.4f}")
+        ablation_results.append({"mode": mode, "pearson_r": round(r,4), "kappa": round(kappa,4), "f1_macro": round(f1,4), "mae": round(mae,4)})
+
+    print("-"*70)
+    print("Best mode for Kappa:", max(ablation_results, key=lambda x: x["kappa"])["mode"])
+    print("Best mode for F1:   ", max(ablation_results, key=lambda x: x["f1_macro"])["mode"])
+
+    os.makedirs(args.output_dir, exist_ok=True)
+    out_path = os.path.join(args.output_dir, "ablation_results.json")
+    import json
+    with open(out_path, "w") as f:
+        json.dump(ablation_results, f, indent=2)
+    print(f"\nAblation results saved to: {out_path}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_dir",   default="data/datasets")
+    parser.add_argument("--model_dir",  default="models/semantic_bert")
+    parser.add_argument("--dataset",    default="scientsbank", choices=["scientsbank","beetle"])
+    parser.add_argument("--split",      default="test-unseen",
+                        choices=["train","test-unseen","test-unseen-domains","all"])
+    parser.add_argument("--output_dir", default="evaluation/results")
+    parser.add_argument("--use-hf",     dest="use_hf", action="store_true", default=False)
+    parser.add_argument("--ablation",   action="store_true", default=False,
+                        help="Run ablation study comparing all aggregation modes")
+    args = parser.parse_args()
+
+    if args.ablation:
+        run_ablation(args)
+    else:
+        run_evaluation(args)
