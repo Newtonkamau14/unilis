@@ -1,0 +1,41 @@
+# Secrets
+.env
+.env.local
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Hardhat build artefacts (regenerable)
+cache/
+artifacts/
+typechain-types/
+
+# Circuit build outputs (regenerable but large)
+**/circuits/build/
+**/*.zkey
+**/*.wasm
+**/*.r1cs
+**/*.sym
+**/*.ptau
+!**/circuits/pot*.ptau   # if you keep a small ptau in-tree
+
+# Frontend build
+**/frontend/dist/
+**/frontend/.vite/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Deployment evidence (regenerable, but keep recent under evidence/)
+deployments/*.json
+!deployments/.gitkeep
