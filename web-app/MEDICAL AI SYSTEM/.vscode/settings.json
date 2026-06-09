@@ -1,0 +1,11 @@
+{
+    "python.analysis.extraPaths": [
+        "./shared"
+    ]
+}
+{
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.analysis.extraPaths": [
+        "."
+    ]
+}

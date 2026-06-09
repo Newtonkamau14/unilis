@@ -1,1 +1,121 @@
+version: "3.9"
 
+services:
+
+  # =========================================================================
+  # CORE DATABASE BACKBONE
+  # =========================================================================
+  postgres:
+    image: postgres:17-alpine
+    container_name: medical_ai_postgres
+    environment:
+      POSTGRES_USER: ai_admin
+      POSTGRES_PASSWORD: super_secure_password
+      POSTGRES_DB: medical_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Mounts your schema file so it initializes automatically on first boot
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_admin -d medical_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ai_network
+
+  # =========================================================================
+  # APPLICATION MICROSERVICES
+  # =========================================================================
+  gateway:
+    build: ./GATEWAY
+    container_name: gateway_service
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ai_network
+
+  ingestion:
+    build: ./INGESTION
+    container_name: ingestion_service
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./STORAGE:/app/STORAGE
+    restart: unless-stopped
+    networks:
+      - ai_network
+
+  ocr:
+    build: ./OCR
+    container_name: ocr_service
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./STORAGE:/app/STORAGE
+    restart: unless-stopped
+    networks:
+      - ai_network
+
+  detection:
+    build: ./DETECTION
+    container_name: detection_service
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./STORAGE:/app/STORAGE
+    restart: unless-stopped
+    networks:
+      - ai_network
+
+  scoring:
+    build: ./SCORING
+    container_name: scoring_service
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ai_network
+
+  explainability:
+    build: ./EXPLAINABILITY
+    container_name: explainability_service
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./STORAGE:/app/STORAGE
+    restart: unless-stopped
+    networks:
+      - ai_network
+
+# =========================================================================
+# NETWORKS & VOLUMES DEFINITIONS
+# =========================================================================
+volumes:
+  postgres_data: # Keeps your database records persistent on your host machine
+
+networks:
+  ai_network:
+    driver: bridge
