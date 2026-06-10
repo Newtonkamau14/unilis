@@ -1,5 +1,66 @@
-# Python compiled files
+# ============================================================
+# asag-service .gitignore
+# ============================================================
+
+# ── Python cache ────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
+.Python
+*.pyc
+
+# ── Virtual environments ─────────────────────────────────────
+venv/
+env/
+.env/
+.venv/
+
+# ── Model files (too large for GitHub — copy manually via scp)
+models/semantic_bert/model.safetensors
+models/semantic_bert/pytorch_model.bin
+models/semantic_bert/*.bin
+models/semantic_bert/*.safetensors
+
+# KEEP these model config files (small, needed to load model)
+!models/semantic_bert/config.json
+!models/semantic_bert/tokenizer.json
+!models/semantic_bert/tokenizer_config.json
+!models/semantic_bert/vocab.txt
+!models/semantic_bert/special_tokens_map.json
+
+# ── Evaluation results (keep JSON, ignore large outputs) ─────
+evaluation/results/*.png
+evaluation/results/*.pdf
+
+# KEEP evaluation JSON results
+!evaluation/results/*.json
+
+# ── Datasets (downloaded at runtime, not committed) ──────────
+data/datasets/scientsbank/
+data/datasets/beetle/
+data/datasets/mohler/
+*.parquet
+*.arrow
+
+# ── Environment files ────────────────────────────────────────
+.env
+.env.local
+.env.production
+
+# ── IDE / OS ─────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Logs ────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Testing ─────────────────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage

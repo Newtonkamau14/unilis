@@ -1,0 +1,72 @@
+[
+  {
+    "dataset": "scientsbank",
+    "split": "test-unseen",
+    "model_type": "multi_component_bert",
+    "n_instances": 2023,
+    "pearson_r": 0.8672,
+    "pearson_p": 0.0,
+    "cohen_kappa_quadratic": 0.8638,
+    "f1_macro": 0.9129,
+    "f1_weighted": 0.9228,
+    "mae": 0.1167,
+    "accuracy": 0.9239,
+    "per_class_f1": {
+      "incorrect": 0.8908,
+      "partially_correct": 0.9019,
+      "correct": 0.946
+    },
+    "confusion_matrix": [
+      [
+        461,
+        19,
+        72
+      ],
+      [
+        12,
+        331,
+        28
+      ],
+      [
+        10,
+        13,
+        1077
+      ]
+    ]
+  },
+  {
+    "dataset": "scientsbank",
+    "split": "test-unseen",
+    "model_type": "holistic_baseline",
+    "n_instances": 2023,
+    "pearson_r": 0.4518,
+    "pearson_p": 0.0,
+    "cohen_kappa_quadratic": 0.4149,
+    "f1_macro": 0.4318,
+    "f1_weighted": 0.4749,
+    "mae": 0.6431,
+    "accuracy": 0.435,
+    "per_class_f1": {
+      "incorrect": 0.5089,
+      "partially_correct": 0.2544,
+      "correct": 0.5322
+    },
+    "confusion_matrix": [
+      [
+        286,
+        216,
+        50
+      ],
+      [
+        178,
+        168,
+        25
+      ],
+      [
+        108,
+        566,
+        426
+      ]
+    ]
+  }
+]
