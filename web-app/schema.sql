@@ -1,6 +1,5 @@
 -- ============================================================
 -- ASAG System Database Schema
--- Colors: #D4AF37 (Gold) | #1E3A8A (Deep Blue)
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS asag_db

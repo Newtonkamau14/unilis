@@ -15,8 +15,8 @@ $page_title = $page_title ?? APP_NAME;
 <body>
 <nav class="navbar">
   <a class="navbar-brand" href="<?= BASE_URL ?>">
-    <span class="brand-icon">⬡</span>
-    <span class="brand-name">ASAG</span>
+    <span class="brand-icon"></span>
+    <span class="brand-name">UNILIS STUDENT ASSESSMENT</span>
   </a>
   <div class="nav-links">
     <?php if (!empty($_SESSION['user_id'])): ?>
