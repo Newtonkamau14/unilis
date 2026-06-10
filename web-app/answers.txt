@@ -1,0 +1,30 @@
+Q1
+
+TCP is used when you need reliable data like downloading files. UDP doesn't guarantee your packets arrive but it is super fast, which is why applications use it for live video calls and online video games
+
+Q2
+C
+
+Q3
+DNS is essentially the phonebook of the internet. Its main job is to resolve human-readable domain names like google.com into numeric IP addresses that routers understand. When you look up a site, your computer queries a resolver, which looks at root name servers, then TLD servers, and finally gets the IP from the authoritative name server
+
+Q4
+B
+
+Q5
+The three steps are the user entering their system username, entering their secure profile password, and completing a security CAPTCHA verification step
+
+Q6
+A
+
+Q7
+Hubs send data to all devices at the same time which causes slowdowns. Switches send data directly to the single computer that needs it.
+
+Q8
+B
+
+Q9
+C
+
+Q10
+NAT converts standard text strings inside database tables into secured numeric formats to prevent SQL injection data breaches.
